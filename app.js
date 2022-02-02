@@ -5,6 +5,7 @@ const cookieParser = require('cookie-parser');
 const { celebrate, Joi, errors } = require('celebrate');
 
 const cors = require('cors');
+const helmet = require('helmet');
 const router = require('./routes');
 const auth = require('./middlewares/auth');
 const centralizedErrors = require('./middlewares/centralizedErrors');
@@ -22,6 +23,8 @@ app.use(
   '*',
   cors({
     origin: [
+      'https://moviex.nomoredomains.work',
+      'http://moviex.nomoredomains.work',
       'localhost:4000',
     ],
     methods: ['OPTIONS', 'GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
@@ -37,6 +40,7 @@ app.use(cookieParser());
 app.use(express.json());
 
 app.use(requestLogger);
+app.use(helmet());
 app.use(rateLimiter);
 
 app.get('/crash-test', () => {
