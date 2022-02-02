@@ -22,7 +22,7 @@ app.use(
   '*',
   cors({
     origin: [
-      'localhost:3000',
+      'localhost:4000',
     ],
     methods: ['OPTIONS', 'GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
     preflightContinue: false,
