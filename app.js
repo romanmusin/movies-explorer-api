@@ -5,7 +5,7 @@ const cookieParser = require('cookie-parser');
 const { celebrate, Joi, errors } = require('celebrate');
 
 const cors = require('cors');
-const helmet = require('helmet');
+// const helmet = require('helmet');
 const router = require('./routes');
 const auth = require('./middlewares/auth');
 const centralizedErrors = require('./middlewares/centralizedErrors');
@@ -40,7 +40,7 @@ app.use(cookieParser());
 app.use(express.json());
 
 app.use(requestLogger);
-app.use(helmet());
+// app.use(helmet());
 app.use(rateLimiter);
 
 app.get('/crash-test', () => {
