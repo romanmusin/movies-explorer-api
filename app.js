@@ -14,7 +14,7 @@ const rateLimiter = require('./middlewares/rateLimit');
 const { requestLogger, errorLogger } = require('./middlewares/logger');
 const { createUser, login } = require('./controllers/users');
 
-const { PORT } = process.env || 4000;
+const { PORT = 4000 } = process.env;
 const app = express();
 
 mongoose.connect('mongodb://localhost:27017/moviesdb');
