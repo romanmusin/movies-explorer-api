@@ -23,8 +23,8 @@ app.use(
   '*',
   cors({
     origin: [
-      'https://moviex.nomoredomains.work',
-      'http://moviex.nomoredomains.work',
+      'https://api.moviex.nomoredomains.work',
+      'http://api.moviex.nomoredomains.work',
       'localhost:4000',
     ],
     methods: ['OPTIONS', 'GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
