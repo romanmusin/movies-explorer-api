@@ -8,21 +8,36 @@ const {
   deleteMovie,
 } = require('../controllers/movies');
 
-movieRouter.get('/movies', getMovies);
+movieRouter.get('/', getMovies);
 
-movieRouter.post('/movies', celebrate({
-
-  body: Joi.object().keys({
-    name: Joi.string().required().min(2).max(30),
-    link: Joi.string().required().custom(isValidUrl),
+movieRouter.post(
+  '/',
+  celebrate({
+    body: Joi.object().keys({
+      country: Joi.string().required(),
+      director: Joi.string().required(),
+      duration: Joi.number().required(),
+      year: Joi.string().required(),
+      description: Joi.string().required(),
+      image: Joi.string().required().custom(isValidUrl),
+      trailer: Joi.string().required().custom(isValidUrl),
+      nameRU: Joi.string().required(),
+      nameEN: Joi.string().required(),
+      thumbnail: Joi.string().required().custom(isValidUrl),
+      movieId: Joi.number().required(),
+    }),
   }),
-}), createMovie);
+  createMovie,
+);
 
-movieRouter.delete('/movies/:movieId', celebrate({
-
-  params: Joi.object().keys({
-    cardId: Joi.string().required().hex().length(24),
+movieRouter.delete(
+  '/:movieId',
+  celebrate({
+    params: Joi.object().keys({
+      movieId: Joi.string().required().hex().length(24),
+    }),
   }),
-}), deleteMovie);
+  deleteMovie,
+);
 
 module.exports = movieRouter;

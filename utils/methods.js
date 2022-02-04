@@ -5,5 +5,5 @@ module.exports.isValidUrl = (url) => {
   if (valided) {
     return url;
   }
-  throw new Error('URL validation err');
+  throw new Error('Некорректная ссылка');
 };

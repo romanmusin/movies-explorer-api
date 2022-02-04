@@ -69,14 +69,15 @@ module.exports.getUser = (req, res, next) => {
 };
 
 module.exports.updateUser = (req, res, next) => {
-  const { name, about } = req.body;
+  const { name, email } = req.body;
+  const userId = req.user._id;
 
   User
     .findByIdAndUpdate(
-      req.user._id,
+      userId,
       {
         name,
-        about,
+        email,
       },
       {
         new: true,

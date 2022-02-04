@@ -13,12 +13,37 @@ module.exports.getMovies = (req, res, next) => {
 };
 
 module.exports.createMovie = (req, res, next) => {
-  const { name, link } = req.body;
-  const owner = req.user._id;
+  const {
+    country,
+    director,
+    duration,
+    year,
+    description,
+    image,
+    trailer,
+    thumbnail,
+    movieId,
+    nameRU,
+    nameEN,
+  } = req.body;
+  const userId = req.user._id;
 
   Movie
-    .create({ name, link, owner })
-    .then((movie) => res.send({ data: movie }))
+    .create({
+      country,
+      director,
+      duration,
+      year,
+      description,
+      image,
+      trailer,
+      nameRU,
+      nameEN,
+      thumbnail,
+      owner: userId,
+      movieId,
+    })
+    .then((movie) => res.status(201).send({ movie }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
         next(new IncorrectDataError('Переданы некорректные данные при создании карточки'));
