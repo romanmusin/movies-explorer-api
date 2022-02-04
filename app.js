@@ -69,6 +69,7 @@ app.get('/logout', (req, res, next) => {
   next();
 });
 
+app.use(helmet());
 app.use(router);
 app.use(errorLogger);
 app.use(errors());
