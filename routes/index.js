@@ -1,7 +1,5 @@
 const router = require('express').Router();
 const { celebrate, Joi } = require('celebrate');
-const userRouter = require('./users');
-const movieRouter = require('./movies');
 const NotFoundError = require('../errors/notFoundErr');
 
 const auth = require('../middlewares/auth');
@@ -32,8 +30,9 @@ router.post(
 
 router.use(auth);
 
-router.use('/users', userRouter);
-router.use('/movies', movieRouter);
+router.use(require('./users'));
+router.use(require('./movies'));
+
 router.use('/*', (req, res, next) => {
   next(new NotFoundError('Ошибка - страница не найдена'));
 });

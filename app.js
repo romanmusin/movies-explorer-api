@@ -12,10 +12,19 @@ const centralizedErrors = require('./middlewares/centralizedErrors');
 const rateLimiter = require('./middlewares/rateLimit');
 const { requestLogger, errorLogger } = require('./middlewares/logger');
 
-const { PORT = 4000 } = process.env;
+const { dataBse, NODE_ENV } = process.env;
+const { PORT = 3000 } = process.env;
 const app = express();
 
-mongoose.connect('mongodb://localhost:27017/moviesdb');
+mongoose.connect(
+  NODE_ENV === 'production' ? dataBse : 'mongodb://localhost:27017/moviesdb',
+  {
+    useNewUrlParser: true,
+    useCreateIndex: true,
+    useFindAndModify: false,
+    useUnifiedTopology: true,
+  },
+);
 
 app.use(
   '*',
@@ -25,6 +34,8 @@ app.use(
       'http://moviex.nomoredomains.work',
       'http://localhost:3000',
       'https://localhost:3000',
+      'http://localhost:4000',
+      'https://localhost:4000',
     ],
     methods: ['OPTIONS', 'GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
     preflightContinue: false,
@@ -59,8 +70,8 @@ app.get('/logout', (req, res, next) => {
 });
 
 app.use(router);
-app.use(errors());
 app.use(errorLogger);
+app.use(errors());
 
 app.use(centralizedErrors);
 app.listen(PORT, () => {

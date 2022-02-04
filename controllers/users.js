@@ -1,6 +1,5 @@
 require('dotenv').config();
 const bcrypt = require('bcrypt');
-const validator = require('validator');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 
@@ -10,22 +9,15 @@ const NotFoundError = require('../errors/notFoundErr');
 const ConflictError = require('../errors/conflictErr');
 
 module.exports.createUser = (req, res, next) => {
-  const {
-    email, password, name,
-  } = req.body;
+  const { email, password, name } = req.body;
 
   bcrypt
     .hash(password, 10)
-    .then((hash) => {
-      if (!validator.isEmail(email)) {
-        throw new IncorrectDataError('Передан некорректный e-mail');
-      }
-      return User.create({
-        email,
-        password: hash,
-        name,
-      });
-    })
+    .then((hash) => User.create({
+      email,
+      password: hash,
+      name,
+    }))
     .then((user) => {
       const dataUser = {
         email: user.email,
@@ -72,29 +64,34 @@ module.exports.updateUser = (req, res, next) => {
   const { name, email } = req.body;
   const userId = req.user._id;
 
-  User
-    .findByIdAndUpdate(
-      userId,
-      {
-        name,
-        email,
-      },
-      {
-        new: true,
-        runValidators: true,
-      },
-    )
+  User.findByIdAndUpdate(
+    userId,
+    {
+      name,
+      email,
+    },
+    {
+      new: true,
+      runValidators: true,
+    },
+  )
     .then((user) => {
       if (user) {
         return res.send({
-          data: user,
+          user,
         });
       }
       throw new NotFoundError('Пользователь по указанному id не найден');
     })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
-        next(new IncorrectDataError('Переданы некорректные данные при обновлении профиля'));
+      if (err.code === 11000) {
+        next(new ConflictError('Пользователь с таким email уже существует'));
+      } else if (err.name === 'ValidationError') {
+        next(
+          new IncorrectDataError(
+            'Переданы некорректные данные при обновлении профиля',
+          ),
+        );
       } else if (err.name === 'CastError') {
         next(new IncorrectDataError('Передан некорректный id пользователя'));
       } else {
@@ -106,12 +103,14 @@ module.exports.updateUser = (req, res, next) => {
 module.exports.login = (req, res, next) => {
   const { email, password } = req.body;
 
-  User.findOne({ email }).select('+password')
+  User.findOne({ email })
+    .select('+password')
     .then((user) => {
       if (!user) {
         throw new UnauthorizedError('Неправильные почта или пароль');
       }
-      return bcrypt.compare(password, user.password)
+      return bcrypt
+        .compare(password, user.password)
         .then((matched) => {
           if (!matched) {
             throw new UnauthorizedError('Неправильные почта или пароль');
