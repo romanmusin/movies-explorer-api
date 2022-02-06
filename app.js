@@ -14,7 +14,7 @@ const rateLimiter = require('./middlewares/rateLimit');
 const { requestLogger, errorLogger } = require('./middlewares/logger');
 
 const { dataBse, NODE_ENV } = process.env;
-const { PORT = 4000 } = process.env;
+const { PORT = 3000 } = process.env;
 const app = express();
 
 mongoose.connect(
@@ -29,8 +29,6 @@ app.use(
       'http://moviex.nomoredomains.work',
       'http://localhost:3000',
       'https://localhost:3000',
-      'http://localhost:4000',
-      'https://localhost:4000',
     ],
     methods: ['OPTIONS', 'GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
     preflightContinue: false,
@@ -47,24 +45,7 @@ app.use(express.json());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(requestLogger);
-app.use(helmet());
 app.use(rateLimiter);
-
-app.get('/crash-test', () => {
-  setTimeout(() => {
-    throw new Error('Сервер сейчас упадёт');
-  }, 0);
-});
-
-app.get('/logout', (req, res, next) => {
-  res
-    .clearCookie('jwt', {
-      secure: true,
-      sameSite: 'none',
-    })
-    .send({ message: 'Выход совершен успешно' });
-  next();
-});
 
 app.use(helmet());
 app.use(router);
@@ -72,6 +53,4 @@ app.use(errorLogger);
 app.use(errors());
 
 app.use(centralizedErrors);
-app.listen(PORT, () => {
-  console.log(`Запуск на порту ${PORT}`);
-});
+app.listen(PORT);

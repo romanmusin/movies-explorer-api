@@ -78,7 +78,7 @@ module.exports.updateUser = (req, res, next) => {
     .then((user) => {
       if (user) {
         return res.send({
-          user,
+          data: user,
         });
       }
       throw new NotFoundError('Пользователь по указанному id не найден');

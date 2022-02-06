@@ -1,6 +1,5 @@
 const router = require('express').Router();
 const { celebrate, Joi } = require('celebrate');
-const NotFoundError = require('../errors/notFoundErr');
 
 const auth = require('../middlewares/auth');
 const { createUser, login } = require('../controllers/users');
@@ -28,13 +27,24 @@ router.post(
   login,
 );
 
+router.get('/crash-test', () => {
+  setTimeout(() => {
+    throw new Error('Сервер сейчас упадёт');
+  }, 0);
+});
+
+router.get('/logout', (req, res, next) => {
+  res
+    .clearCookie('jwt', {
+      secure: true,
+      sameSite: 'none',
+    })
+    .send({ message: 'Выход совершен успешно' });
+  next();
+});
 router.use(auth);
 
 router.use(require('./users'));
 router.use(require('./movies'));
-
-router.use('/*', (req, res, next) => {
-  next(new NotFoundError('Ошибка - страница не найдена'));
-});
 
 module.exports = router;
