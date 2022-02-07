@@ -48,7 +48,7 @@ app.use(requestLogger);
 app.use(rateLimiter);
 
 app.use(helmet());
-app.use(router);
+app.use('/', router);
 app.use(errorLogger);
 app.use(errors());
 
