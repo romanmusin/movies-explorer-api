@@ -1,6 +1,6 @@
 const router = require('express').Router();
 const { celebrate, Joi } = require('celebrate');
-
+const NotFoundError = require('../errors/notFoundErr');
 const auth = require('../middlewares/auth');
 const { createUser, login } = require('../controllers/users');
 
@@ -46,5 +46,9 @@ router.use(auth);
 
 router.use(require('./users'));
 router.use(require('./movies'));
+
+router.all('*', () => {
+  throw new NotFoundError('Такой страницы не существует');
+});
 
 module.exports = router;
