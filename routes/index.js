@@ -47,7 +47,7 @@ router.use(auth);
 router.use(require('./users'));
 router.use(require('./movies'));
 
-router.all('*', () => {
+router.all('/*', () => {
   throw new NotFoundError('Такой страницы не существует');
 });
 
