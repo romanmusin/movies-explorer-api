@@ -8,10 +8,10 @@ const {
   deleteMovie,
 } = require('../controllers/movies');
 
-router.get('/movies', getMovies);
+router.get('/', getMovies);
 
 router.post(
-  '/movies',
+  '/',
   celebrate({
     body: Joi.object().keys({
       country: Joi.string().required(),
@@ -31,7 +31,7 @@ router.post(
 );
 
 router.delete(
-  '/movies/:movieId',
+  '/:movieId',
   celebrate({
     params: Joi.object().keys({
       movieId: Joi.string().required().hex().length(24),
