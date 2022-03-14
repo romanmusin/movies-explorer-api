@@ -5,14 +5,10 @@ const movieSchema = new mongoose.Schema({
   country: {
     type: String,
     required: true,
-    minlength: 2,
-    maxlength: 30,
   },
   director: {
     type: String,
     required: true,
-    minlength: 2,
-    maxlength: 30,
   },
   duration: {
     type: Number,
@@ -21,7 +17,6 @@ const movieSchema = new mongoose.Schema({
   year: {
     type: String,
     required: true,
-    minlength: 4,
   },
   description: {
     type: String,
@@ -31,29 +26,35 @@ const movieSchema = new mongoose.Schema({
     type: String,
     required: true,
     validate: {
-      validator: (url) => validator.isURL(url),
-      message: 'Некорректная ссылка',
+      validator(v) {
+        return validator.isURL(v);
+      },
+      message: 'Введите корректную ссылку',
     },
   },
   trailer: {
     type: String,
     required: true,
     validate: {
-      validator: (url) => validator.isURL(url),
-      message: 'Некорректная ссылка',
+      validator(v) {
+        return validator.isURL(v);
+      },
+      message: 'Введите корректную ссылку',
     },
   },
   thumbnail: {
     type: String,
     required: true,
     validate: {
-      validator: (url) => validator.isURL(url),
-      message: 'Некорректная ссылка',
+      validator(v) {
+        return validator.isURL(v);
+      },
+      message: 'Введите корректную ссылку',
     },
   },
   owner: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'user',
     required: true,
   },
   movieId: {
@@ -63,15 +64,11 @@ const movieSchema = new mongoose.Schema({
   nameRU: {
     type: String,
     required: true,
-    minlength: 2,
-    maxlength: 30,
   },
   nameEN: {
     type: String,
     required: true,
-    minlength: 2,
-    maxlength: 30,
   },
 });
 
-module.exports = mongoose.model('Movie', movieSchema);
+module.exports = mongoose.model('movie', movieSchema);
