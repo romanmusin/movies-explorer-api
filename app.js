@@ -26,16 +26,15 @@ app.use(
   '*',
   cors({
     origin: [
-      'https://moviex.nomoredomains.work',
       'http://moviex.nomoredomains.work',
-      'http://localhost:3000',
-      'https://localhost:3000',
+      'https://moviex.nomoredomains.work',
+      'localhost:3000',
     ],
     methods: ['OPTIONS', 'GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
     preflightContinue: false,
     optionsSuccessStatus: 204,
     allowedHeaders: ['Content-Type', 'origin', 'Authorization', 'Cookie'],
-    // exposedHeaders: ['Set-Cookie'],
+    exposedHeaders: ['Set-Cookie'],
     credentials: true,
   }),
 );
