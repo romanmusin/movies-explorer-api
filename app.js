@@ -26,7 +26,7 @@ app.use(
   '*',
   cors({
     origin: [
-      'https://moviex.nomoredomains.work',
+      'https://moviex.nomoredomains.work/',
       'http://moviex.nomoredomains.work',
       'http://localhost:3000',
       'https://localhost:3000',
@@ -35,15 +35,10 @@ app.use(
     preflightContinue: false,
     optionsSuccessStatus: 204,
     allowedHeaders: ['Content-Type', 'origin', 'Authorization', 'Cookie'],
-    exposedHeaders: ['Set-Cookie'],
+    // exposedHeaders: ['Set-Cookie'],
     credentials: true,
   }),
 );
-
-// app.use(cors({
-//   origin: NODE_ENV === 'production' ? 'https://moviex.nomoredomains.work' : 'http://localhost:3000',
-//   credentials: true,
-// }));
 
 app.use(cookieParser());
 app.use(express.json());
