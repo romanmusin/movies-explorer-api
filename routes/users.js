@@ -1,17 +1,12 @@
-const router = require('express').Router();
-const { celebrate, Joi } = require('celebrate');
-
+const router = require('express')
+  .Router();
+const { validateUserInfo } = require('../middlewares/validation');
 const {
-  getMyUser,
   updateProfile,
+  getMyUser,
 } = require('../controllers/users');
 
-router.get('/me', getMyUser);
-router.patch('/me', celebrate({
-  body: Joi.object().keys({
-    name: Joi.string().required().min(2).max(30),
-    email: Joi.string().required().email(),
-  }),
-}), updateProfile);
+router.get('/me', getMyUser); // возвращает информацию о пользователе (email и имя)
+router.patch('/me', validateUserInfo, updateProfile); // обновляет информацию о пользователе (email и имя)
 
 module.exports = router;
