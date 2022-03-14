@@ -26,7 +26,7 @@ app.use(
   '*',
   cors({
     origin: [
-      'https://moviex.nomoredomains.work/',
+      'https://moviex.nomoredomains.work',
       'http://moviex.nomoredomains.work',
       'http://localhost:3000',
       'https://localhost:3000',
@@ -48,7 +48,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(requestLogger);
 app.use(rateLimiter);
 
-app.use('/', router);
+app.use(router);
 app.use(errorLogger);
 app.use(errors());
 
