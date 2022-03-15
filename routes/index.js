@@ -1,30 +1,21 @@
 const router = require('express').Router();
-const { celebrate, Joi } = require('celebrate');
-
+const usersRouter = require('./users');
+const moviesRouter = require('./movies');
+const NotFoundError = require('../errors/NotFoundError');
 const auth = require('../middlewares/auth');
-const { createUser, login } = require('../controllers/user');
+const { login, createUser } = require('../controllers/users');
+const { validateSignUp, validateSignIn } = require('../middlewares/validation');
 
-const userRoutes = require('./user');
-const movieRoutes = require('./movie');
-
-router.post('/signup', celebrate({
-  body: Joi.object().keys({
-    name: Joi.string().required().min(2).max(30),
-    email: Joi.string().required().email(),
-    password: Joi.string().required(),
-  }),
-}), createUser);
-
-router.post('/signin', celebrate({
-  body: Joi.object().keys({
-    email: Joi.string().required().email(),
-    password: Joi.string().required(),
-  }),
-}), login);
+router.post('/signin', validateSignIn, login);
+router.post('/signup', validateSignUp, createUser);
 
 router.use(auth);
 
-router.use('/users', userRoutes);
-router.use('/movies', movieRoutes);
+router.use('/users', usersRouter);
+router.use('/movies', moviesRouter);
+
+router.all('*', () => {
+  throw new NotFoundError('Такой страницы не существует');
+});
 
 module.exports = router;
