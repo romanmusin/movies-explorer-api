@@ -44,8 +44,8 @@ app.set('trust proxy', 1);
 app.use(limiter);
 
 const allowedCors = [
-  'http://dip.nomoredomains.work',
-  'https://dip.nomoredomains.work',
+  'http://moviex.nomoredomains.work',
+  'https://moviex.nomoredomains.work',
   'http://localhost:3000',
   'https://localhost:3000',
 ];
