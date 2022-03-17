@@ -1,41 +1,51 @@
-const express = require('express');
-const helmet = require('helmet');
-const dotenv = require('dotenv');
-const mongoose = require('mongoose');
-const cors = require('cors');
-const bodyParser = require('body-parser');
-const { errors } = require('celebrate');
-const routes = require('./routes');
-const errorsHandler = require('./middlewares/centralizedErrors');
-const limiter = require('./middlewares/rateLimit');
-const {
-  requestLogger,
-  errorLogger,
-} = require('./middlewares/logger');
+require('dotenv').config();
 
-dotenv.config();
-const {
-  NODE_ENV,
-  PORT = 5000,
-  DB_URL,
-} = process.env;
+const helmet = require('helmet');
+const express = require('express');
+const mongoose = require('mongoose');
+const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser');
+const { celebrate, Joi } = require('celebrate');
+const limiter = require('./middlewares/rateLimit');
+
+const handleErrors = require('./handle-errors');
+const { requestLogger, errorLogger } = require('./middlewares/logger');
+const NotFoundError = require('./errors/NotFoundError');
+
+const auth = require('./middlewares/auth');
+const { createUser, login } = require('./controllers/users');
+
+const api = require('./routes');
+
+const { DB, NODE_ENV } = process.env;
+const { PORT = 5000 } = process.env;
 
 const app = express();
+
+async function start() {
+  try {
+    app.listen(PORT, () => `Server is running on port ${PORT}`);
+    await mongoose.connect(NODE_ENV === 'production' ? DB : 'mongodb://localhost:27017/moviesdb', {
+      useNewUrlParser: true,
+      useCreateIndex: true,
+      useFindAndModify: false,
+      useUnifiedTopology: true,
+    });
+  } catch (error) {
+    return `Init application error: status 500 ${error}`;
+  }
+  return null;
+}
+
 app.use(helmet());
 
-mongoose.connect(NODE_ENV === 'production' ? DB_URL : 'mongodb://localhost:27017/moviesdb', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
+app.set('trust proxy', 1);
 
-// app.use(cors({
-//   origin: NODE_ENV === 'production' ? 'https://moviex.nomoredomains.work' : 'http://localhost:3000',
-//   credentials: true,
-// }));
+app.use(limiter);
 
 const allowedCors = [
-  'http://moviex.nomoredomains.work',
-  'https://moviex.nomoredomains.work',
+  'http://dip.nomoredomains.work',
+  'https://dip.nomoredomains.work',
   'http://localhost:3000',
   'https://localhost:3000',
 ];
@@ -60,18 +70,40 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(bodyParser.json());
+app.use(bodyParser.json()); // for parsing application/json
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(cookieParser('secret'));
 
-app.use(requestLogger);
+app.use(requestLogger); // подключаем логгер запросов
 
-app.use(limiter);
+app.post('/signup', celebrate({
+  body: Joi.object().keys({
+    name: Joi.string().required().min(2).max(30),
+    email: Joi.string().required().email(),
+    password: Joi.string().required(),
+  }),
+}), createUser);
 
-app.use(routes);
+app.post('/signin', celebrate({
+  body: Joi.object().keys({
+    email: Joi.string().required().email(),
+    password: Joi.string().required(),
+  }),
+}), login);
+
+app.use(auth);
+
+app.use(api);
+
+app.use('/*', (req, res, next) => {
+  next(new NotFoundError('Запрашиваемый ресурс не найден'));
+});
 
 app.use(errorLogger);
-app.use(errors()); // обработчик ошибок celebrate
 
-app.use(errorsHandler);
+app.use((err, req, res, next) => {
+  handleErrors(err, req, res, next);
+});
 
-app.listen(PORT);
+start();
+module.exports = app;

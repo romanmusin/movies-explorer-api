@@ -1,126 +1,93 @@
+const { JWT_SECRET, NODE_ENV } = process.env;
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const dotenv = require('dotenv');
 const User = require('../models/user');
-const ValidationError = require('../errors/ValidationError');
-const DuplicateError = require('../errors/DuplicateError');
-const NotFoundError = require('../errors/NotFoundError');
+// errors import
+const BadRequest = require('../errors/ValidationError');
+const NotFound = require('../errors/ValidationError');
+const ConflictError = require('../errors/DuplicateError');
+const UnauthorizedError = require('../errors/AuthError');
 
-dotenv.config();
-
-const {
-  NODE_ENV,
-  JWT_SECRET,
-} = process.env;
-
-// Получить данные о текущем пользователе
-const getMyUser = (req, res, next) => {
-  User.findById(req.user._id)
-    .orFail(new NotFoundError('Нет пользователя с таким id'))
-    .then((user) => res.status(200).send(user))
-    .catch((err) => {
-      if (err.name === 'CastError') {
-        throw new ValidationError('Id неверный');
-      } else {
-        next(err);
-      }
-    })
-    .catch(next);
+module.exports.getCurrentUser = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (user) {
+      return res.send({ user });
+    }
+    throw next(new NotFound('Пользователь не найден'));
+  } catch (err) {
+    if (err.name === 'CastError') {
+      return next(new NotFound('Пользователь не найден'));
+    }
+    return next(new Error());
+  }
 };
 
-// Обновить данные пользователя
-const updateProfile = (req, res, next) => {
-  const {
-    name,
-    email,
-  } = req.body;
-  if (!name || !email) {
-    throw new ValidationError('Введенные данные некорректны');
-  }
-  User.findByIdAndUpdate(req.user._id, {
-    name,
-    email,
-  }, {
-    new: true,
-    runValidators: true,
-  })
-    .orFail(new NotFoundError('Нет пользователя с таким Id'))
-    .then((data) => res.status(200)
-      .send(data))
-    .catch((err) => {
-      if (err.name === 'MongoError' || err.code === 11000) {
-        throw new DuplicateError('Пользователь с таким email уже существует');
-      } else if (err.name === 'ValidationError' || err.name === 'CastError') {
-        throw new ValidationError('Введенные данные некорректны');
-      } else {
-        next(err);
-      }
-    })
-    .catch(next);
-};
-
-// Создание пользователя
-const createUser = (req, res, next) => {
-  const {
-    name,
-    email,
-    password,
-  } = req.body;
-  if (!email || !name || !password) {
-    throw new ValidationError('Почта или пароль неверные');
-  }
-  bcrypt.hash(password, 10)
-    .then((hash) => {
-      User.create({
-        email,
-        name,
-        password: hash,
-      })
-        .then((user) => {
-          const token = jwt.sign({ _id: user._id }, `${NODE_ENV === 'production' ? JWT_SECRET : 'dev-secret'}`, { expiresIn: '7d' });
-          res.send({
-            _id: user._id,
-            name: user.name,
-            email: user.email,
-            token,
-          });
-        })
-        .catch((err) => {
-          if (err.name === 'MongoError' && err.code === 11000) {
-            throw new DuplicateError('Пользователь с таким email уже существует');
-          } else if (err.name === 'ValidationError' || err.name === 'CastError') {
-            throw new ValidationError('Пароль или почта некорректны');
-          } else {
-            next(err);
-          }
-        })
-        .catch(next);
+module.exports.updateUser = async (req, res, next) => {
+  try {
+    const userId = req.user._id;
+    const { name, email } = req.body;
+    const user = await User.findByIdAndUpdate(userId, { name, email }, {
+      new: true,
+      runValidators: true,
     });
+    if (user) {
+      return res.send({ user });
+    }
+    throw next(new NotFound('Пользователь не найден'));
+  } catch (err) {
+    if (err.name === 'MongoError' && err.code === 11000) {
+      return next(new ConflictError('Пользователь с таким email уже существует'));
+    }
+    if (err.name === 'ValidationError') {
+      return next(new BadRequest('Введены некорректные данные пользователя'));
+    } if (err.name === 'CastError') {
+      return next(new NotFound('Пользователь не найден'));
+    }
+    return next(new Error());
+  }
 };
 
-// Авторизация
-const login = (req, res, next) => {
-  const {
-    email,
-    password,
-  } = req.body;
-  return User.findUserByCredentials(email, password)
-    .then((user) => {
-      const token = jwt.sign({ _id: user._id }, `${NODE_ENV === 'production' ? JWT_SECRET : 'dev-secret'}`, { expiresIn: '7d' });
-      res.status(200)
-        .send({
-          _id: user._id,
+module.exports.createUser = async (req, res, next) => {
+  try {
+    const { name, email, password } = req.body;
+    if (password) {
+      const hash = await bcrypt.hash(password, 10);
+      const user = await User.create({
+        name, email, password: hash,
+      });
+      return res.status(201).send({
+        user: {
           name: user.name,
           email: user.email,
-          token,
-        });
-    })
-    .catch((err) => next(err));
+          _id: user._id,
+        },
+      });
+    }
+
+    return next(new BadRequest('Введены некорректные данные пользователя'));
+  } catch (err) {
+    if (err.name === 'MongoError' && err.code === 11000) {
+      next(new ConflictError('Пользователь с таким email уже существует'));
+    }
+    if (err.name === 'ValidationError') {
+      next(new BadRequest('Введены некорректные данные пользователя'));
+    }
+    return next(new Error());
+  }
 };
 
-module.exports = {
-  getMyUser,
-  updateProfile,
-  createUser,
-  login,
+module.exports.login = async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
+    const user = await User.findUserByCredentials(email, password);
+    const token = jwt.sign(
+      { _id: user._id },
+      NODE_ENV === 'production' ? JWT_SECRET : 'dev-secret',
+      { expiresIn: '7d' },
+    );
+    return res.send({ token });
+  } catch (err) {
+    return next(new UnauthorizedError(err.message));
+  }
 };
